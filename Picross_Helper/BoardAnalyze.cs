@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Tesseract;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -12,13 +13,14 @@ namespace Picross_Helper
     class BoardAnalyze
     {
         Bitmap screenshot;
-        Graphics yikes;
+        Bitmap greyscaled;
         Tuple<Double, Double> startPixel_Column;
         Tuple<Double, Double> startPixel_Row;
         int widthColumn = 0;
         int widthRow = 0;
-        int HeightColumn = 0;
-        int HeightRow = 0;
+        int heightColumn = 0;
+        int heightRow = 0;
+        TesseractEngine engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default);
 
         public void setImage(Bitmap screenshot)
         {
@@ -31,14 +33,22 @@ namespace Picross_Helper
             search2 = DetectColorWithUnsafe(screenshot, (byte)82, (byte)146, (byte)198, 0, (int)search1.Item1, (int)search1.Item2, screenshot.Size.Width, screenshot.Size.Height, 1);
             widthColumn = (int)(search2.Item1 - search1.Item1);
             search3 = DetectColorWithUnsafeDown(screenshot, (byte)255, (byte)255, (byte)255, 0, (int)search1.Item1, (int)search1.Item2, screenshot.Size.Width, screenshot.Size.Height, 1);
-            HeightColumn = (int)(search3.Item2 - search1.Item2);
+            heightColumn = (int)(search3.Item2 - search1.Item2);
             //Get values for left hints
             search2 = DetectColorWithUnsafe(screenshot, (byte)82, (byte)146, (byte)198, 0, 0, (int)search3.Item2 - 1, (int)search1.Item1, screenshot.Size.Height, 1);
             startPixel_Row = search2;
             search1 = DetectColorWithUnsafe(screenshot, (byte)66, (byte)117, (byte)173, 0, (int)search2.Item1, (int)search2.Item2, screenshot.Size.Width, (int)search2.Item2 + 1, 1);
             widthRow = (int)(search1.Item1 - search2.Item1);
             search3 = DetectColorWithUnsafeDown(screenshot, (byte)66, (byte)117, (byte)173, 0, (int)search2.Item1, (int)search2.Item2, screenshot.Size.Width, screenshot.Size.Height, 1);
-            HeightRow = (int)(search3.Item2 - search2.Item2);
+            heightRow = (int)(search3.Item2 - search2.Item2);
+
+            Bitmap Section = MakeGrayscale(screenshot.Clone(new System.Drawing.Rectangle((int)startPixel_Column.Item1, (int)startPixel_Column.Item2, widthColumn, heightColumn), screenshot.PixelFormat), 0);
+            MakeGrayscale(Section, 1).Save("B:\\wat2.png");
+            Section.Save("B:\\wat.png");
+            Pix ocrImage = PixConverter.ToPix(MakeGrayscale(Section, 1));
+            var page = engine.Process(ocrImage);
+            Console.WriteLine(page.GetText());
+
             Console.WriteLine("debug breakpoint");
         }
         public Boolean isSolving()
@@ -143,6 +153,59 @@ namespace Picross_Helper
             image.UnlockBits(imageData);
             Console.WriteLine(posX + " and " + posY);
             return Tuple.Create(posX, posY);
+        }
+
+        //Source: https://web.archive.org/web/20130111215043/http://www.switchonthecode.com/tutorials/csharp-tutorial-convert-a-color-image-to-grayscale
+        public Bitmap MakeGrayscale(Bitmap original, int mode)
+        {
+            //create a blank bitmap the same size as original
+            Bitmap newBitmap = new Bitmap(original.Width, original.Height);
+
+            //get a graphics object from the new image
+            Graphics g = Graphics.FromImage(newBitmap);
+            ColorMatrix colorMatrix;
+
+            if (mode == 0)
+            {
+                //create the grayscale ColorMatrix
+                colorMatrix = new ColorMatrix(
+                    new float[][]{
+                        new float[] {.3f, .3f, .3f, 0, 0},
+                        new float[] {.59f, .59f, .59f, 0, 0},
+                        new float[] {.11f, .11f, .11f, 0, 0},
+                        new float[] {0, 0, 0, 1, 0},
+                        new float[] {0, 0, 0, 0, 1}
+                    }
+                );
+            }
+            else
+            {
+                //create the invert ColorMatrix
+                colorMatrix = new ColorMatrix(
+                    new float[][]{
+                        new float[] {-1, 0, 0, 0, 0},
+                        new float[] {0, -1, 0, 0, 0},
+                        new float[] {0, 0, -1, 0, 0},
+                        new float[] {0, 0, 0, 1, 0},
+                        new float[] {1, 1, 1, 0, 1}
+                    }
+                );
+            }
+
+            //create some image attributes
+            ImageAttributes attributes = new ImageAttributes();
+
+            //set the color matrix attribute
+            attributes.SetColorMatrix(colorMatrix);
+
+            //draw the original image on the new image
+            //using the grayscale color matrix
+            g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
+               0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+
+            //dispose the Graphics object
+            g.Dispose();
+            return newBitmap;
         }
     }
 }

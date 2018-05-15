@@ -18,7 +18,9 @@ namespace Picross_Helper
 
             Thread.Sleep(1000);
             //Game.GetScreenshot("pib").Save("b:\\current.png", System.Drawing.Imaging.ImageFormat.Png);
+            //Board.MakeGrayscale(Board.MakeGrayscale(Game.GetScreenshot("pib"), 0) ,1).Save("C:\\Users\\MDuh\\Desktop\\ocr ttrain\\captured\\" + counter + ".tiff", System.Drawing.Imaging.ImageFormat.Tiff);
             //Board.setImage(Game.GetScreenshot("pib"));
+
             Board.setImage(tester);
             Console.ReadKey();
         }
