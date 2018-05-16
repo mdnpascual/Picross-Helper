@@ -42,10 +42,11 @@ namespace Picross_Helper
             search3 = DetectColorWithUnsafeDown(screenshot, (byte)66, (byte)117, (byte)173, 0, (int)search2.Item1, (int)search2.Item2, screenshot.Size.Width, screenshot.Size.Height, 1);
             heightRow = (int)(search3.Item2 - search2.Item2);
 
-            Bitmap Section = MakeGrayscale(screenshot.Clone(new System.Drawing.Rectangle((int)startPixel_Column.Item1, (int)startPixel_Column.Item2, widthColumn, heightColumn), screenshot.PixelFormat), 0);
-            MakeGrayscale(Section, 1).Save("B:\\wat2.png");
+            //Grayscaling image and Playing with OCR
+            Bitmap Section = MakeGrayscale(screenshot.Clone(new System.Drawing.Rectangle((int)startPixel_Column.Item1, (int)startPixel_Column.Item2, widthColumn, heightColumn), screenshot.PixelFormat));
+            MakeGrayscale(Section).Save("B:\\wat2.png");
             Section.Save("B:\\wat.png");
-            Pix ocrImage = PixConverter.ToPix(MakeGrayscale(Section, 1));
+            Pix ocrImage = PixConverter.ToPix(MakeGrayscale(Section));
             var page = engine.Process(ocrImage);
             Console.WriteLine(page.GetText());
 
@@ -156,7 +157,7 @@ namespace Picross_Helper
         }
 
         //Source: https://web.archive.org/web/20130111215043/http://www.switchonthecode.com/tutorials/csharp-tutorial-convert-a-color-image-to-grayscale
-        public Bitmap MakeGrayscale(Bitmap original, int mode)
+        public Bitmap MakeGrayscale(Bitmap original)
         {
             //create a blank bitmap the same size as original
             Bitmap newBitmap = new Bitmap(original.Width, original.Height);
@@ -165,32 +166,16 @@ namespace Picross_Helper
             Graphics g = Graphics.FromImage(newBitmap);
             ColorMatrix colorMatrix;
 
-            if (mode == 0)
-            {
-                //create the grayscale ColorMatrix
-                colorMatrix = new ColorMatrix(
-                    new float[][]{
-                        new float[] {.3f, .3f, .3f, 0, 0},
-                        new float[] {.59f, .59f, .59f, 0, 0},
-                        new float[] {.11f, .11f, .11f, 0, 0},
-                        new float[] {0, 0, 0, 1, 0},
-                        new float[] {0, 0, 0, 0, 1}
-                    }
-                );
-            }
-            else
-            {
-                //create the invert ColorMatrix
-                colorMatrix = new ColorMatrix(
-                    new float[][]{
-                        new float[] {-1, 0, 0, 0, 0},
-                        new float[] {0, -1, 0, 0, 0},
-                        new float[] {0, 0, -1, 0, 0},
+            //create the grayscale then invert ColorMatrix
+            colorMatrix = new ColorMatrix(
+                new float[][]{
+                        new float[] {-.3f, -.3f, -.3f, 0, 0},
+                        new float[] {-.59f, -.59f, -.59f, 0, 0},
+                        new float[] {-.11f, -.11f, -.11f, 0, 0},
                         new float[] {0, 0, 0, 1, 0},
                         new float[] {1, 1, 1, 0, 1}
-                    }
-                );
-            }
+                }
+            );
 
             //create some image attributes
             ImageAttributes attributes = new ImageAttributes();
