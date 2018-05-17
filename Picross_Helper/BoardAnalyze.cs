@@ -20,7 +20,8 @@ namespace Picross_Helper
         int widthRow = 0;
         int heightColumn = 0;
         int heightRow = 0;
-        TesseractEngine engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default);
+        //TesseractEngine engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default);
+        TesseractEngine engine = new TesseractEngine(@"./tessdata", "pib", EngineMode.Default);
 
         public void setImage(Bitmap screenshot)
         {
@@ -44,9 +45,8 @@ namespace Picross_Helper
 
             //Grayscaling image and Playing with OCR
             Bitmap Section = MakeGrayscale(screenshot.Clone(new System.Drawing.Rectangle((int)startPixel_Column.Item1, (int)startPixel_Column.Item2, widthColumn, heightColumn), screenshot.PixelFormat));
-            MakeGrayscale(Section).Save("B:\\wat2.png");
             Section.Save("B:\\wat.png");
-            Pix ocrImage = PixConverter.ToPix(MakeGrayscale(Section));
+            Pix ocrImage = PixConverter.ToPix(Section);
             var page = engine.Process(ocrImage);
             Console.WriteLine(page.GetText());
 
@@ -169,13 +169,23 @@ namespace Picross_Helper
             //create the grayscale then invert ColorMatrix
             colorMatrix = new ColorMatrix(
                 new float[][]{
+                        new float[] {1, 1, 1, 0, 0},
+                        new float[] {1, 1, 1, 0, 0},
+                        new float[] {1, 1, 1, 0, 0},
+                        new float[] {0, 0, 0, 1, 0},
+                        new float[] {0, 0, 0, 0, 1}
+                }
+            );
+            /*
+            colorMatrix = new ColorMatrix(
+                new float[][]{
                         new float[] {-.3f, -.3f, -.3f, 0, 0},
                         new float[] {-.59f, -.59f, -.59f, 0, 0},
                         new float[] {-.11f, -.11f, -.11f, 0, 0},
                         new float[] {0, 0, 0, 1, 0},
                         new float[] {1, 1, 1, 0, 1}
                 }
-            );
+            );*/
 
             //create some image attributes
             ImageAttributes attributes = new ImageAttributes();
